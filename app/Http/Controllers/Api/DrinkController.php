@@ -9,11 +9,11 @@ Use App\Http\Controllers\Api\ResponseController;
 Use App\Http\Controllers\Api\TypeController;
 Use App\Http\Controllers\Api\PackageController;
 use App\Http\Requests\DrinkAddChecker;
+use Illuminate\Support\Facades\Gate;
 
 class DrinkController extends ResponseController
 {
     public function getDrinks(){
-
         $drinks= Drink::with("type","package")->get();
         return $this->sendResponse(DrinkResource::collection($drinks),"Italok betöltve");
     }
@@ -28,17 +28,22 @@ class DrinkController extends ResponseController
     }
 
     public function newDrink(DrinkAddChecker $request){
-        $request->validated();
-        $input=$request->all();
-
-        $drink= new Drink;
-        $drink->drink=$input["drink"];
-        $drink->amount=$input["amount"];
-        $drink->type_id=(new TypeController)->getTypeId($input["type"]);
-        $drink->package_id=(new PackageController)->getPackageId($input["package"]);
-
-        $drink->save();
-        return $this->sendResponse($drink,"Ital kiírva");
+        if(Gate::allows("is_admin",auth()->user())){
+            $request->validated();
+            $input=$request->all();
+    
+            $drink= new Drink;
+            $drink->drink=$input["drink"];
+            $drink->amount=$input["amount"];
+            $drink->type_id=(new TypeController)->getTypeId($input["type"]);
+            $drink->package_id=(new PackageController)->getPackageId($input["package"]);
+    
+            $drink->save();
+            return $this->sendResponse($drink,"Ital kiírva");
+        }else{
+            getDrinks();
+            return "Ehhez túl kicsi a péniszed :(";
+        }
     }
 
     public function modifyDrink(DrinkAddChecker $request){

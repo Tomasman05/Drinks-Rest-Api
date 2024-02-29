@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rules\Password;
 
 class UserRegisterChecker extends FormRequest
 {
@@ -25,9 +26,13 @@ class UserRegisterChecker extends FormRequest
     {
         return [
             "name"=>"required|max:20|unique:users",
-            "email"=>"required|email|unique:users",
-            "password"=>"required|min:6",
-            "confirm_password"=>"required|same:password"
+            "email"=>[
+                "required",
+                "regex:/(.+)@(.+)\.(.+)/i",
+                "unique:users",
+            ],
+            "password"=>["required",Password::min(6)->letters()->mixedCase()->numbers()->symbols(),"confirmed"],
+            "password_confirmation"=>["required"]
         ];
     }
 
@@ -40,8 +45,11 @@ class UserRegisterChecker extends FormRequest
             "email.email"=> "Invalid email cím",
             "password.required" => "Jelszó elvárt",
             "password.min" => "Túl rövid a jelszó",
+            "password.letters"=>"legyenek betűk",
+            "password.mixed"=>"mixed case",
+            "password.symbols"=>"Különleges karakter kell",
             "confirm_password.required"=>"Hiányzó jelszó megerősítés",
-            "confirm_password.same" => "Nem egyező jelszó" 
+            "password_confirmation.required" => "Nem egyező jelszó" 
         ];
     }
 
